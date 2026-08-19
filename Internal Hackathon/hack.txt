@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KhelSetu - Institutional Facility Utilisation Platform</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js for Utilization Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- QRCode.js for Gate Pass Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- HTML5 QR Code Scanner Library for Security Guard Scanner -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    /* Smooth sliding animation styles for card carousels */
+    .slideshow-wrapper {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .slideshow-slide {
+      min-width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    /* Hide scrollbar for smooth slidable components */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Mobile-optimized QR Scanner Video Container Styling */
+    #qr-reader {
+      width: 100% !important;
+      border: none !important;
+    }
+    #qr-reader video {
+      width: 100% !important;
+      height: auto !important;
+      max-height: 320px;
+      object-fit: cover !important;
+      border-radius: 0.75rem;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+      <!-- LOGO & BRAND NAME -->
+      <div class="flex items-center space-x-3">
+        <img src="png.png" width="200" alt="KhelSetu Logo">
+        <span class="text-xl font-bold tracking-wide flex items-center gap-2">
+          KhelSetu 
+          <span class="text-xs font-normal bg-emerald-600 px-2 py-0.5 rounded text-white">Developed by TEAM SARATHI</span>
+        </span>
+      </div>
+      <!-- ROLE SWITCHER & SIGN IN -->
+      <div class="flex items-center space-x-1 sm:space-x-2 bg-slate-800 p-1.5 rounded-lg border border-slate-700 text-xs sm:text-sm">
+        
+        <!-- PLAYER SIGN IN BUTTON (POSITIONED LEFT OF ATHLETE) -->
+        <button onclick="openSignInModal()" id="nav-signin" class="px-2.5 py-1 rounded-md font-medium transition bg-slate-700 text-emerald-400 hover:bg-slate-600 border border-slate-600 flex items-center">
+          <i data-lucide="log-in" class="inline w-4 h-4 mr-1"></i> Sign In
+        </button>
+
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1 hidden sm:inline">:</span>
+
+        <button onclick="switchRole('athlete')" id="nav-athlete" class="role-btn px-2.5 py-1 rounded-md font-medium transition bg-emerald-600 text-white">
+          <i data-lucide="user" class="inline w-4 h-4 mr-1"></i> Athlete
+        </button>
+        <button onclick="switchRole('admin')" id="nav-admin" class="role-btn px-2.5 py-1 rounded-md font-medium transition text-slate-300 hover:text-white">
+          <i data-lucide="building" class="inline w-4 h-4 mr-1"></i> Admin
+        </button>
+        <button onclick="switchRole('guard')" id="nav-guard" class="role-btn px-2.5 py-1 rounded-md font-medium transition text-slate-300 hover:text-white">
+          <i data-lucide="scan" class="inline w-4 h-4 mr-1"></i> Guard
+        </button>
+        <!-- FEEDBACK SLOT POSITIONED TO THE RIGHT OF GUARD SLOT -->
+        <button onclick="switchRole('feedback')" id="nav-feedback" class="role-btn px-2.5 py-1 rounded-md font-medium transition text-slate-300 hover:text-white">
+          <i data-lucide="message-square-plus" class="inline w-4 h-4 mr-1"></i> Feedback :
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- 1. ATHLETE VIEW -->
+    <section id="view-athlete" class="space-y-6">
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Available Outdoor Sports Grounds</h2>
+            <p class="text-slate-500 text-sm">Book verified school & college outdoor infrastructure (3:00 PM - 10:30 PM).</p>
+          </div>
+          <!-- CUSTOM SPORT BUTTON -->
+          <button onclick="openCustomSportModal()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg flex items-center justify-center transition shadow-sm shrink-0">
+            <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i> + Add Custom Outdoor Ground
+          </button>
+        </div>
+        
+        <!-- SLIDABLE FLOATING SEARCH & FILTER CONTROL PANEL -->
+        <div class="relative bg-gradient-to-r from-slate-900 to-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 mb-8 text-white">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center">
+              <i data-lucide="sliders" class="w-3.5 h-3.5 mr-1.5"></i> Slidable Quick Search Engine
+            </span>
+            <div class="flex space-x-1">
+              <button onclick="scrollSearch(-250)" class="p-1 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 hover:text-white transition">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              </button>
+              <button onclick="scrollSearch(250)" class="p-1 bg-slate-700 hover:bg-slate-600 rounded text-slate-300 hover:text-white transition">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Horizontal Slidable Container -->
+          <div id="slidable-search-bar" class="flex items-center space-x-4 overflow-x-auto no-scrollbar scroll-smooth py-1">
+            
+            <!-- Institute Search Input Slide -->
+            <div class="min-w-[300px] sm:min-w-[340px] flex shrink-0">
+              <div class="relative w-full">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="search-input" onkeyup="filterFacilities()" placeholder="Type institute or outdoor ground..." class="pl-9 pr-3 py-2.5 bg-slate-800 border border-slate-600 text-white placeholder-slate-400 rounded-l-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-emerald-400">
+              </div>
+              <button onclick="filterFacilities()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 text-sm rounded-r-lg transition shrink-0 flex items-center">
+                Search
+              </button>
+            </div>
+            
+            <!-- Outdoor Sport Selector Slide -->
+            <div class="min-w-[260px] sm:min-w-[290px] flex shrink-0">
+              <div class="relative w-full">
+                <i data-lucide="trophy" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <select id="sport-filter" onchange="filterFacilities()" class="pl-9 pr-3 py-2.5 bg-slate-800 border border-slate-600 text-white rounded-l-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-emerald-400 appearance-none">
+                  <option value="ALL" class="bg-slate-800 text-white">All Outdoor Sports</option>
+                  <option value="Football" class="bg-slate-800 text-white">Football Turf</option>
+                  <option value="Athletics" class="bg-slate-800 text-white">Athletics Track</option>
+                  <option value="Tennis" class="bg-slate-800 text-white">Outdoor Tennis Court</option>
+                  <option value="Basketball" class="bg-slate-800 text-white">Outdoor Basketball</option>
+                  <option value="Volleyball" class="bg-slate-800 text-white">Sand / Beach Volleyball</option>
+                  <option value="Cricket" class="bg-slate-800 text-white">Cricket Ground</option>
+                </select>
+                <i data-lucide="chevron-down" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+              </div>
+              <button onclick="filterFacilities()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 text-sm rounded-r-lg transition shrink-0 flex items-center">
+                Filter
+              </button>
+            </div>
+
+            <!-- Extended Hours Shortcut Buttons Slide -->
+            <div class="min-w-[220px] flex shrink-0 space-x-2">
+              <button onclick="quickFilterSport('Football')" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-xs font-semibold text-slate-200 hover:text-white transition whitespace-nowrap">
+                ⚽ Football Turfs
+              </button>
+              <button onclick="quickFilterSport('Cricket')" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-xs font-semibold text-slate-200 hover:text-white transition whitespace-nowrap">
+                🏏 Cricket Grounds
+              </button>
+            </div>
+
+            <!-- Reset Filter Button Slide -->
+            <div class="min-w-[160px] shrink-0">
+              <button onclick="resetFilters()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-2.5 px-4 rounded-lg text-sm transition flex items-center justify-center space-x-2 border border-slate-600">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                <span>Reset Filters</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Facility Cards Grid -->
+        <div id="facility-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Dynamically populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. SCHOOL ADMIN VIEW -->
+    <section id="view-admin" class="hidden space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-500 uppercase">Baseline Utilisation</div>
+          <div class="text-2xl font-black text-slate-700 mt-1">18.2%</div>
+          <div class="text-xs text-slate-400 mt-1">Before platform integration</div>
+        </div>
+        <div class="bg-emerald-50 p-5 rounded-xl border border-emerald-200 shadow-sm">
+          <div class="text-xs font-semibold text-emerald-700 uppercase">Current Utilisation</div>
+          <div class="text-2xl font-black text-emerald-600 mt-1" id="admin-util-rate">86.4%</div>
+          <div class="text-xs text-emerald-700 mt-1">↑ +68.2% increase with extended access hours</div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-500 uppercase">Monthly Auxiliary Revenue</div>
+          <div class="text-2xl font-black text-slate-900 mt-1" id="admin-revenue">₹3,45,600</div>
+          <div class="text-xs text-emerald-600 mt-1">Reinvested into equipment & grounds maintaining</div>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-500 uppercase">Total Verified Entries</div>
+          <div class="text-2xl font-black text-slate-900 mt-1" id="admin-entries">548</div>
+          <div class="text-xs text-slate-500 mt-1">0 security incidents reported</div>
+        </div>
+      </div>
+
+      <!-- INSTITUTE APPROVAL SECTION (PLAYER PERMISSION MANAGEMENT) -->
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 flex items-center">
+              <i data-lucide="user-check" class="w-5 h-5 mr-2 text-emerald-600"></i> Institute Player Approvals & Entry Access
+            </h3>
+            <p class="text-xs text-slate-500">Approve or reject players seeking institute campus entry permissions.</p>
+          </div>
+          <span class="text-xs bg-slate-100 text-slate-700 font-semibold px-2.5 py-1 rounded border border-slate-200">
+            Real-time Status Updates
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
+              <tr>
+                <th class="p-3">Player Details</th>
+                <th class="p-3">Govt ID / Phone</th>
+                <th class="p-3">Institute Ground</th>
+                <th class="p-3">Applied Slot</th>
+                <th class="p-3">Approval Status</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-approvals-table-body" class="divide-y divide-slate-100">
+              <!-- Dynamically populated via renderAdminApprovalsTable() -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="font-bold text-slate-900 mb-4 flex items-center"><i data-lucide="bar-chart-3" class="w-5 h-5 mr-2 text-emerald-600"></i> Ground Utilisation Metrics (Extended Hours Included)</h3>
+          <div class="relative h-64 w-full">
+            <canvas id="utilizationChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-slate-900 mb-2 flex items-center"><i data-lucide="calendar" class="w-5 h-5 mr-2 text-emerald-600"></i> Extended Academic Schedule Sync</h3>
+            <p class="text-xs text-slate-500 mb-4">Auto-opens slots when school operating hours end.</p>
+            
+            <div class="space-y-3">
+              <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100 text-xs">
+                <div>
+                  <div class="font-bold text-slate-800">Weekdays (Mon - Fri)</div>
+                  <div class="text-slate-500">Academic: 8:00 AM - 2:30 PM</div>
+                </div>
+                <span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-1 rounded">3:00 PM - 10:30 PM</span>
+              </div>
+              <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100 text-xs">
+                <div>
+                  <div class="font-bold text-slate-800">Saturday & Sunday</div>
+                  <div class="text-slate-500">Academic: Closed</div>
+                </div>
+                <span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-1 rounded">6:00 AM - 10:30 PM</span>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="alert('Extended Academic Calendar synced successfully!')" class="w-full mt-4 bg-slate-900 text-white font-medium py-2 rounded-lg text-sm hover:bg-slate-800 transition">
+            Sync Academic Calendar Now
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SECURITY GUARD VIEW WITH ENHANCED CROSS-DEVICE QR SCANNER & OFFLINE BUFFER STATUS -->
+    <section id="view-guard" class="hidden space-y-6">
+      <div class="max-w-xl mx-auto bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        
+        <!-- NETWORK & OFFLINE MEMORY BUFFER STATUS BADGE -->
+        <div id="guard-network-status" class="mb-4 p-3 rounded-lg border text-xs font-semibold flex items-center justify-between bg-emerald-50 border-emerald-300 text-emerald-800">
+          <span class="flex items-center">
+            <i data-lucide="wifi" class="w-4 h-4 mr-1.5 text-emerald-600"></i> Internet Status: <strong class="ml-1" id="network-text">Online</strong>
+          </span>
+          <span class="bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded text-[10px] uppercase font-bold" id="buffer-badge">
+            Offline Memory Buffer Active
+          </span>
+        </div>
+
+        <div class="text-center mb-6">
+          <div class="inline-block p-3 bg-emerald-100 text-emerald-600 rounded-full mb-2">
+            <i data-lucide="qr-code" class="w-8 h-8"></i>
+          </div>
+          <h2 class="text-xl font-bold text-slate-900">Gate Pass Scanner & Identity Verifier</h2>
+          <p class="text-xs text-slate-500">Universal scanner supporting all smartphones, tablets, laptops, and photo uploads.</p>
+        </div>
+
+        <div class="space-y-5">
+          <!-- LIVE CAMERA SCANNER SECTION -->
+          <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 text-center">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center">
+                <i data-lucide="camera" class="w-4 h-4 mr-1 text-emerald-600"></i> Camera Scanner
+              </span>
+              <span id="scanner-status" class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-200 text-slate-600">Inactive</span>
+            </div>
+
+            <!-- Mobile & Desktop QR Reader Canvas Container -->
+            <div id="qr-reader" class="w-full max-w-sm mx-auto overflow-hidden bg-slate-900 rounded-lg hidden"></div>
+
+            <div class="flex flex-col sm:flex-row gap-2 mt-3">
+              <button id="btn-start-scanner" onclick="startCameraScanner()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm transition flex items-center justify-center">
+                <i data-lucide="video" class="w-4 h-4 mr-2"></i> Open Camera
+              </button>
+              <button id="btn-stop-scanner" onclick="stopCameraScanner()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-lg text-sm transition hidden flex items-center justify-center">
+                <i data-lucide="video-off" class="w-4 h-4 mr-2"></i> Stop Camera
+              </button>
+            </div>
+          </div>
+
+          <!-- UNIVERSAL FILE UPLOAD OPTION FOR ALL DEVICES -->
+          <div class="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4 text-center">
+            <span class="text-xs font-bold text-slate-600 uppercase tracking-wider block mb-2">
+              <i data-lucide="image" class="inline w-4 h-4 mr-1 text-slate-500"></i> Scan from Photo / Screenshot
+            </span>
+            <input type="file" id="qr-file-input" accept="image/*" onchange="scanQrFromFile(event)" class="hidden">
+            <button onclick="document.getElementById('qr-file-input').click()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2 rounded-lg text-xs transition flex items-center justify-center">
+              <i data-lucide="upload" class="w-3.5 h-3.5 mr-1.5"></i> Select QR Image File
+            </button>
+          </div>
+
+          <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-slate-200"></div>
+            <span class="flex-shrink mx-4 text-xs font-semibold text-slate-400 uppercase">Or Manual Verification</span>
+            <div class="flex-grow border-t border-slate-200"></div>
+          </div>
+
+          <!-- MANUAL ENTRY -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Enter Pass Code</label>
+            <div class="flex space-x-2">
+              <input type="text" id="manual-pass-id" placeholder="e.g. PASS-8921" class="border border-slate-300 rounded-lg p-2.5 text-sm w-full focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <button onclick="verifyPass()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm transition">Verify</button>
+            </div>
+          </div>
+
+          <!-- SCAN RESULT CONTAINER -->
+          <div id="scan-result" class="hidden p-4 rounded-lg border text-sm space-y-2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. PLAYER FEEDBACK VIEW SECTION -->
+    <section id="view-feedback" class="hidden space-y-6">
+      <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="text-center mb-6">
+          <div class="inline-block p-3 bg-emerald-100 text-emerald-600 rounded-full mb-2">
+            <i data-lucide="message-square" class="w-8 h-8"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900">Player Improvement & Rating Portal</h2>
+          <p class="text-xs text-slate-500 mt-1">Help institutes improve their ground infrastructure, safety, and equipment facilities.</p>
+        </div>
+
+        <form onsubmit="handleFeedbackSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Select Institution / Ground</label>
+            <select id="feedback-institute-select" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+              <!-- Dynamically populated via JavaScript -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Overall Rating</label>
+            <div class="flex items-center space-x-2 py-1">
+              <select id="feedback-rating" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+                <option value="5">⭐⭐⭐⭐⭐ 5 - Excellent (Great Turf, Lighting & Equipment)</option>
+                <option value="4">⭐⭐⭐⭐ 4 - Good (Minor Scope for Improvement)</option>
+                <option value="3">⭐⭐⭐ 3 - Average (Decent Grounds, Maintenance Needed)</option>
+                <option value="2">⭐⭐ 2 - Below Average (Gear or Safety Issues)</option>
+                <option value="1">⭐ 1 - Poor Experience</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Player Feedback & Suggestions</label>
+            <textarea id="feedback-text" rows="4" required placeholder="Share details on pitch conditions, lighting, guard assistance, equipment status, or recommended improvements..." class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500"></textarea>
+          </div>
+
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg text-sm transition flex items-center justify-center space-x-2">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>Submit Feedback to Institute</span>
+          </button>
+        </form>
+
+        <div id="feedback-success-msg" class="hidden mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs">
+          <p class="font-bold flex items-center"><i data-lucide="check-circle" class="w-4 h-4 mr-1 text-emerald-600"></i> Feedback Submitted Successfully!</p>
+          <p class="mt-1">Thank you for your valuable response. The institutional administration has been notified.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PLAYER SIGN IN MODAL -->
+  <div id="signin-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeSignInModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      
+      <div class="text-center mb-6">
+        <div class="inline-block p-3 bg-emerald-100 text-emerald-600 rounded-full mb-2">
+          <i data-lucide="user-check" class="w-8 h-8"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900">Player Sign In</h3>
+        <p class="text-xs text-slate-500">Log in to manage your bookings and athlete profile</p>
+      </div>
+
+      <form onsubmit="handleSignIn(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Email or Phone Number</label>
+          <input type="text" id="signin-email" required placeholder="player@example.com" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+          <input type="password" id="signin-password" required placeholder="••••••••" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm transition flex items-center justify-center space-x-2">
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          <span>Sign In to Account</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- INVALID QR CODE ALERT MODAL FOR SECURITY GUARD -->
+  <div id="invalid-qr-modal" class="fixed inset-0 bg-slate-900 bg-opacity-75 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl text-center relative border-t-4 border-rose-600">
+      <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-rose-100 text-rose-600 mb-3">
+        <i data-lucide="alert-triangle" class="w-7 h-7"></i>
+      </div>
+      <h3 class="text-xl font-bold text-slate-900 mb-1">Invalid QR Code!</h3>
+      <p class="text-xs text-slate-500 mb-4">The scanned QR code or image does not belong to a valid InstiSport Gate Pass.</p>
+      
+      <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-left mb-4 text-xs space-y-1">
+        <div class="text-rose-900 font-semibold flex items-center">
+          <i data-lucide="x-circle" class="w-4 h-4 mr-1 text-rose-600"></i> Verification Error
+        </div>
+        <p class="text-rose-700" id="invalid-qr-details">Unrecognized data scanned.</p>
+      </div>
+
+      <button onclick="closeInvalidQrModal()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-lg text-sm transition shadow-sm">
+        Dismiss & Try Again
+      </button>
+    </div>
+  </div>
+
+  <!-- SLOT ALREADY BOOKED POPUP MODAL -->
+  <div id="slot-booked-modal" class="fixed inset-0 bg-slate-900 bg-opacity-75 hidden flex items-center justify-center p-4 z-[60]">
+    <div class="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl text-center relative border-t-4 border-amber-500">
+      <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 text-amber-600 mb-3">
+        <i data-lucide="calendar-x" class="w-7 h-7"></i>
+      </div>
+      <h3 class="text-lg font-bold text-slate-900 mb-2">Slot Already Booked</h3>
+      <p class="text-xs text-slate-600 mb-5 leading-relaxed">
+        This slot is already booked. Try in another institute slot or change your time period.
+      </p>
+      <button onclick="closeSlotBookedModal()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-lg text-sm transition shadow-sm">
+        Understand & Change Slot
+      </button>
+    </div>
+  </div>
+
+  <!-- INSTITUTE DETAILS POPUP MODAL -->
+  <div id="institute-popup-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeInstituteModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="bg-emerald-100 text-emerald-700 p-3 rounded-full">
+          <i data-lucide="building-2" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-slate-900" id="popup-inst-name">Institute Name</h3>
+          <p class="text-xs text-slate-500" id="popup-inst-location">Location details</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 border-t border-b border-slate-100 py-4 mb-4 text-sm">
+        <div class="flex justify-between">
+          <span class="text-slate-500">Outdoor Ground Type:</span>
+          <span class="font-bold text-slate-800" id="popup-inst-sport">Football</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Ground Dimensions:</span>
+          <span class="font-bold text-slate-800" id="popup-inst-dimensions">100m x 64m</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Ground Hourly Rate:</span>
+          <span class="font-bold text-emerald-600" id="popup-inst-rate">₹500 / hr</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Refundable Deposit:</span>
+          <span class="font-bold text-amber-600" id="popup-inst-deposit">₹200 (100% Refundable)</span>
+        </div>
+        
+        <!-- Available Equipment Information -->
+        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <span class="text-xs font-bold text-slate-700 uppercase block mb-1.5 flex items-center">
+            <i data-lucide="dumbbell" class="w-3.5 h-3.5 mr-1 text-emerald-600"></i> Available Outdoor Gear Rentals
+          </span>
+          <ul id="popup-equipment-list" class="text-xs space-y-1 text-slate-600">
+            <!-- Dynamically injected -->
+          </ul>
+        </div>
+
+        <div class="flex justify-between">
+          <span class="text-slate-500">Extended Access Hours:</span>
+          <span class="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-xs sm:text-sm">3:00 PM - 10:30 PM</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Gate Security:</span>
+          <span class="font-semibold text-slate-800">QR Gate Verification</span>
+        </div>
+        <div class="mt-2 text-xs bg-slate-50 p-2.5 rounded border border-slate-200 text-slate-600">
+          <strong>Campus Rules:</strong> Strictly outdoor sports gear required. Check-in at security post upon arrival. Deposit is fully refunded after the session if no property is damaged.
+        </div>
+      </div>
+
+      <div class="flex space-x-3">
+        <button onclick="closeInstituteModal()" class="w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold py-2 rounded-lg text-sm transition">Close Info</button>
+        <button id="popup-book-btn" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-sm transition">Proceed to Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM OUTDOOR GROUND MODAL -->
+  <div id="custom-sport-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeCustomSportModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      
+      <h3 class="text-xl font-bold text-slate-900 mb-1">Add Custom Outdoor Ground</h3>
+      <p class="text-xs text-slate-500 mb-4">List a new outdoor sports facility for your institution.</p>
+
+      <form onsubmit="handleCustomSportSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Institute / School Name</label>
+          <input type="text" id="custom-inst-name" required placeholder="e.g. National Sports Public Academy" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Outdoor Sport Name</label>
+          <input type="text" id="custom-sport-name" required placeholder="e.g. Football, Cricket, Tennis" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Ground Dimensions</label>
+          <input type="text" id="custom-dimensions" placeholder="e.g. 100m x 64m or 105m x 68m" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Hourly Fee (₹)</label>
+            <input type="number" id="custom-rate" required placeholder="500" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Deposit (₹)</label>
+            <input type="number" id="custom-deposit" required placeholder="200" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Distance (km)</label>
+            <input type="text" id="custom-distance" required placeholder="1.8" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Equipment Available (Name & ₹/hr)</label>
+          <input type="text" id="custom-equipment" placeholder="e.g. Match Ball (₹50/hr), Bibs Set (₹30/hr)" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm transition">Publish Outdoor Facility</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- BOOKING & INTEGRATED PAYMENT MODAL -->
+  <div id="booking-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeBookingModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      
+      <h3 class="text-xl font-bold text-slate-900 mb-1" id="modal-title">Reserve Slot</h3>
+      <p class="text-xs text-slate-500 mb-2">Complete identity verification and instant payment to generate your verified gate pass.</p>
+
+      <!-- REDIS LOCK ENGINE HOLD NOTIFICATION -->
+      <div id="redis-lock-timer-banner" class="mb-3 p-2.5 bg-amber-50 border border-amber-300 text-amber-900 rounded-lg text-xs flex items-center justify-between">
+        <span class="flex items-center font-semibold">
+          <i data-lucide="lock" class="w-3.5 h-3.5 mr-1.5 text-amber-600"></i> Redis Lock Active: Slot held for
+        </span>
+        <span id="lock-countdown" class="font-mono font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded">60:00</span>
+      </div>
+
+      <form onsubmit="handleBooking(event)" class="space-y-4">
+        <!-- SLOT SELECTION & CUSTOM TIMING -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Select Extended Access Time Slot</label>
+          <select id="slot-select" onchange="toggleCustomTiming(this.value)" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+            <option value="15:00 - 16:30">3:00 PM - 4:30 PM (After-School Early Slot)</option>
+            <option value="16:30 - 18:00">4:30 PM - 6:00 PM (Standard Afternoon)</option>
+            <option value="18:00 - 19:30">6:00 PM - 7:30 PM (Evening Sunset Session)</option>
+            <option value="19:30 - 21:00">7:30 PM - 9:00 PM (Night Floodlight Session)</option>
+            <option value="21:00 - 22:30">9:00 PM - 10:30 PM (Late Night Floodlight Special)</option>
+            <option value="CUSTOM">Custom Timing (Specify Hours)</option>
+          </select>
+        </div>
+
+        <!-- DYNAMIC CUSTOM TIMING INPUTS -->
+        <div id="custom-timing-container" class="hidden bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <label class="block text-xs font-semibold text-slate-700 mb-2">Custom Access Hours</label>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <span class="text-[10px] text-slate-500 font-bold uppercase">Start Time</span>
+              <input type="time" id="custom-start-time" onchange="checkCustomSlotAvailability()" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 font-bold uppercase">End Time</span>
+              <input type="time" id="custom-end-time" onchange="checkCustomSlotAvailability()" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- NUMBER OF PLAYERS FIELD -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Number of Players in Team</label>
+          <input type="number" id="team-player-count" min="1" max="50" placeholder="e.g. 11" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <!-- SLIDABLE AVAILABLE EQUIPMENT RENTAL CAROUSEL -->
+        <div class="bg-slate-900 text-white p-3.5 rounded-xl border border-slate-700 shadow-md">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center">
+              <i data-lucide="dumbbell" class="w-3.5 h-3.5 mr-1.5"></i> Rent Outdoor Equipment (Swipeable / Slidable)
+            </label>
+            <div class="flex space-x-1">
+              <button type="button" onclick="scrollEquip(-180)" class="p-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition">
+                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+              </button>
+              <button type="button" onclick="scrollEquip(180)" class="p-1 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition">
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Horizontal Slidable Equipment Cards Track -->
+          <div id="equipment-selection-container" class="flex items-center space-x-3 overflow-x-auto no-scrollbar scroll-smooth py-1.5">
+            <!-- Dynamically populated slidable equipment cards -->
+          </div>
+        </div>
+
+        <!-- IDENTITY VERIFICATION -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Identity Verification</label>
+          <div class="space-y-2">
+            <input type="text" id="athlete-name" placeholder="Full Legal Name" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+            <input type="text" id="athlete-id" placeholder="Government ID / Phone Number" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+
+        <!-- PAYMENT METHOD SELECTION -->
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+          <div class="flex justify-between items-center mb-2">
+            <label class="block text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center">
+              <i data-lucide="credit-card" class="w-4 h-4 mr-1 text-emerald-600"></i> Payment Gateway
+            </label>
+            <span id="booking-total-price" class="text-sm font-black text-emerald-600">₹700.00 Total</span>
+          </div>
+
+          <!-- FEE BREAKDOWN CONTAINER -->
+          <div class="bg-white p-2.5 rounded-lg border border-slate-200 text-xs text-slate-600 mb-3 space-y-1">
+            <div class="flex justify-between">
+              <span>Facility Hourly Fee:</span>
+              <span id="summary-slot-fee" class="font-semibold text-slate-800">₹500</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Equipment Addons:</span>
+              <span id="summary-equip-fee" class="font-semibold text-slate-800">₹0</span>
+            </div>
+            <div class="flex justify-between text-emerald-700 font-semibold border-t border-slate-100 pt-1">
+              <span class="flex items-center"><i data-lucide="shield-check" class="w-3.5 h-3.5 mr-1"></i> Security Deposit (Refundable):</span>
+              <span id="summary-deposit-fee">₹200</span>
+            </div>
+            <p class="text-[10px] text-slate-400 italic pt-0.5">* Deposit is fully refunded back to payment source if no property is damaged.</p>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mb-3">
+            <label class="border border-slate-300 bg-white p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-500 transition has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50/50">
+              <input type="radio" name="payment-method" value="upi" checked onchange="togglePaymentInputs('upi')" class="hidden">
+              <i data-lucide="qr-code" class="w-4 h-4 text-emerald-600 mb-1"></i>
+              <span class="text-xs font-semibold text-slate-800">UPI / QR</span>
+            </label>
+
+            <label class="border border-slate-300 bg-white p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-500 transition has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50/50">
+              <input type="radio" name="payment-method" value="card" onchange="togglePaymentInputs('card')" class="hidden">
+              <i data-lucide="credit-card" class="w-4 h-4 text-emerald-600 mb-1"></i>
+              <span class="text-xs font-semibold text-slate-800">Card</span>
+            </label>
+
+            <label class="border border-slate-300 bg-white p-2 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-500 transition has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50/50">
+              <input type="radio" name="payment-method" value="netbanking" onchange="togglePaymentInputs('netbanking')" class="hidden">
+              <i data-lucide="building" class="w-4 h-4 text-emerald-600 mb-1"></i>
+              <span class="text-xs font-semibold text-slate-800">NetBanking</span>
+            </label>
+          </div>
+
+          <!-- DYNAMIC PAYMENT INPUT FIELDS -->
+          <div id="payment-input-container" class="space-y-2">
+            <!-- UPI Input (Default) -->
+            <div id="pay-upi-fields">
+              <input type="text" id="upi-id-input" placeholder="Enter Virtual Payment Address (e.g. name@upi)" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <!-- Card Input -->
+            <div id="pay-card-fields" class="hidden space-y-2">
+              <input type="text" id="card-num-input" placeholder="Card Number (16 Digits)" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500">
+              <div class="grid grid-cols-2 gap-2">
+                <input type="text" id="card-exp-input" placeholder="MM/YY" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500">
+                <input type="password" id="card-cvv-input" maxlength="4" placeholder="CVV" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500">
+              </div>
+            </div>
+
+            <!-- Net Banking Input -->
+            <div id="pay-net-fields" class="hidden">
+              <select id="bank-select" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500">
+                <option value="hdfc">HDFC Bank</option>
+                <option value="icici">ICICI Bank</option>
+                <option value="sbi">State Bank of India</option>
+                <option value="axis">Axis Bank</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-1 flex items-center space-x-2">
+          <input type="checkbox" required id="liability" class="rounded text-emerald-600">
+          <label for="liability" class="text-xs text-slate-600">I accept the Digital Liability & Campus Code of Conduct Agreement.</label>
+        </div>
+
+        <button type="submit" id="btn-submit-booking" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg text-sm transition flex items-center justify-center space-x-2">
+          <i data-lucide="lock" class="w-4 h-4"></i>
+          <span id="booking-btn-text">Pay & Generate Gate Pass</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- PASS DISPLAY MODAL -->
+  <div id="pass-modal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl text-center relative">
+      <div class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full inline-block mb-3">Booking & Payment Confirmed</div>
+      <h3 class="text-lg font-bold text-slate-900" id="pass-facility-name">St. Xavier Outdoor Field</h3>
+      <p class="text-xs text-slate-500 mb-1" id="pass-slot-time">Slot: Today, 6:00 PM - 7:30 PM</p>
+      <p class="text-xs text-emerald-700 font-semibold mb-1" id="pass-player-count">Players: 11 Members</p>
+      <p class="text-xs text-slate-600 mb-1" id="pass-equipment-summary">Equipment: None</p>
+      <p class="text-xs text-emerald-700 font-medium mb-3" id="pass-deposit-summary">Refundable Deposit Held: ₹200</p>
+      
+      <div class="flex flex-col items-center justify-center my-4">
+        <div id="qrcode" class="p-2 bg-white border border-slate-200 rounded-lg shadow-inner"></div>
+        <!-- DYNAMIC ROLLING QR STATUS INDICATOR -->
+        <div class="mt-2 text-[11px] text-slate-500 font-medium flex items-center justify-center space-x-1">
+          <i data-lucide="refresh-cw" class="w-3 h-3 text-emerald-600 animate-spin"></i>
+          <span>Dynamic Rolling QR (Refreshes in <strong id="qr-refresh-timer" class="text-emerald-700">15</strong>s)</span>
+        </div>
+      </div>
+
+      <!-- IMPORTANT ENTRY VERIFICATION NOTE -->
+      <div class="bg-amber-50 border border-amber-300 rounded-lg p-3 text-left mb-4 flex items-start space-x-2.5 shadow-xs">
+        <i data-lucide="shield-alert" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+        <div>
+          <span class="text-xs font-bold text-amber-900 block uppercase tracking-wider">Dynamic Security Active:</span>
+          <p class="text-xs text-amber-800 leading-snug mt-0.5">Do not send static screenshots. Pass uses <strong>Dynamic Rolling QR</strong> to prevent ticket sharing.</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-left mb-4 space-y-1">
+        <div class="text-xs text-slate-500">Pass Code: <span class="font-mono font-bold text-slate-800" id="pass-code-text">PASS-8921</span></div>
+        <div class="text-xs text-slate-500">Payment Status: <span class="font-bold text-emerald-600" id="pass-payment-status">Paid via UPI</span></div>
+        <div class="text-xs text-slate-500">Verification Status: <span class="font-bold text-emerald-600">Identity Cleared</span></div>
+      </div>
+
+      <button onclick="closePassModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 rounded-lg text-sm transition">Done & Back to Home</button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APP LOGIC -->
+  <script>
+    let facilitiesData = [
+      { 
+        id: 1, 
+        name: "SCHOOL OF MANAGEMENT SCIENCES", 
+        sport: "Football", 
+        dimensions: "105m x 68m",
+        rate: 500,
+        deposit: 200, 
+        distance: "2.8 km", 
+        badge: "Full Size Grass Pitch",
+        equipment: [
+          { name: "Match Quality Football", fee: 50, icon: "circle-dot" },
+          { name: "Team Bibs Set (10 Pcs)", fee: 40, icon: "shirt" },
+          { name: "Goalkeeper Gloves (Pair)", fee: 35, icon: "hand" },
+          { name: "Turf Cleats / Shoes", fee: 75, icon: "footprints" },
+          { name: "Corner Flags (Set of 4)", fee: 25, icon: "flag" },
+          { name: "Agility Ladder & Cones", fee: 30, icon: "triangle" },
+          { name: "Portable Floodlight Token", fee: 60, icon: "sun" }
+        ],
+        images: [
+          "s1.jpeg",
+          "s2.jpeg",
+          "s3.jpeg",
+          "s4.jpeg"
+        ]
+      },
+      { 
+        id: 2, 
+        name: "BBD(BABU BANARSI DAS)", 
+        sport: "Football", 
+        dimensions: "100m x 64m",
+        rate: 450, 
+        deposit: 150,
+        distance: "3.5 km", 
+        badge: "Outdoor Floodlit Turf",
+        equipment: [
+          { name: "Training Football", fee: 40, icon: "circle-dot" },
+          { name: "Agility Cones Set (12 Pcs)", fee: 20, icon: "triangle" },
+          { name: "Goalie Gloves Set", fee: 30, icon: "hand" },
+          { name: "Turf Boots (All Sizes)", fee: 60, icon: "footprints" },
+          { name: "Speed Parachute", fee: 45, icon: "wind" }
+        ],
+        images: [
+          "https://images.unsplash.com/photo-1551958219-acbc608c6377?w=600&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=600&auto=format&fit=crop&q=80"
+        ]
+      },
+      { 
+        id: 3, 
+        name: "RAMSWAROOP MEMORIAL COLLEGE", 
+        sport: "Cricket", 
+        dimensions: "137m Radius Oval",
+        rate: 600, 
+        deposit: 300,
+        distance: "1.9 km", 
+        badge: "Floodlit Cricket Arena & Nets",
+        equipment: [
+          { name: "English Willow Bat", fee: 100, icon: "shield" },
+          { name: "Full Guard Kit Bag", fee: 120, icon: "briefcase" },
+          { name: "Leather Match Balls (2 Pcs)", fee: 80, icon: "circle" },
+          { name: "Protective Helmet", fee: 40, icon: "hard-hat" },
+          { name: "Wicketkeeper Gloves & Pads", fee: 70, icon: "hand" },
+          { name: "Spring Target Stumps", fee: 30, icon: "align-justify" }
+        ],
+        images: [
+          "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=600&auto=format&fit=crop&q=80"
+        ]
+      },
+      { 
+        id: 4, 
+        name: "ALPHA PUBLIC COLLEGE", 
+        sport: "Tennis", 
+        dimensions: "23.77m x 10.97m",
+        rate: 350, 
+        deposit: 100,
+        distance: "3.1 km", 
+        badge: "Outdoor Clay Court",
+        equipment: [
+          { name: "Pro Tennis Rackets (Pair)", fee: 70, icon: "swords" },
+          { name: "Tennis Ball Can (3 Balls)", fee: 40, icon: "circle" },
+          { name: "Court Sweeper & Line Marker", fee: 30, icon: "brush" },
+          { name: "Grip Overwraps (2 Pcs)", fee: 20, icon: "activity" }
+        ],
+        images: [
+          "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=600&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=600&auto=format&fit=crop&q=80"
+        ]
+      },
+      { 
+        id: 5, 
+        name: "AMBALIKA INSTITUTE", 
+        sport: "Football", 
+        dimensions: "100m x 65m",
+        rate: 550, 
+        deposit: 250,
+        distance: "2.1 km", 
+        badge: "Pro Synthetic AstroTurf",
+        equipment: [
+          { name: "Pro Match Football", fee: 60, icon: "circle-dot" },
+          { name: "Training Marker Cones", fee: 20, icon: "triangle" },
+          { name: "Team Bibs Set", fee: 35, icon: "shirt" },
+          { name: "High-Power Ball Pump", fee: 15, icon: "gauge" }
+        ],
+        images: [
+          "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=600&auto=format&fit=crop&q=80"
+        ]
+      },
+      { 
+        id: 6, 
+        name: "GOEL INSTITUTE", 
+        sport: "Athletics", 
+        dimensions: "400m Oval Track (8 Lanes)",
+        rate: 400, 
+        deposit: 150,
+        distance: "3.8 km", 
+        badge: "400m Outdoor Synthetic Track",
+        equipment: [
+          { name: "Starting Blocks (Pair)", fee: 50, icon: "box" },
+          { name: "Relay Batons Set", fee: 20, icon: "minus" },
+          { name: "Digital Track Stopwatch", fee: 25, icon: "timer" },
+          { name: "Spike Shoes (Select Size)", fee: 65, icon: "footprints" }
+        ],
+        images: [
+          "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=600&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=600&auto=format&fit=crop&q=80"
+        ]
+      },
+      { 
+        id: 7, 
+        name: "St. Xavier Higher Secondary", 
+        sport: "Basketball", 
+        dimensions: "28m x 15m",
+        rate: 300, 
+        deposit: 100,
+        distance: "1.2 km", 
+        badge: "Outdoor Concrete Court",
+        equipment: [
+          { name: "Grip Basketball (Size 7)", fee: 40, icon: "circle" },
+          { name: "Outdoor Net Replacements", fee: 20, icon: "grid" },
+          { name: "Tactical Coaching Board", fee: 25, icon: "clipboard" }
+        ],
+        images: [
+          "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=600&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1519861531473-9200262188bf?w=600&auto=format&fit=crop&q=80"
+        ]
+      }
+    ];
+
+    let validBookedPasses = {
+      "PASS-8921": { facility: "City Model Public College", slot: "18:00 - 19:30", name: "Alex Morgan", players: 11, equipment: "Match Quality Football", deposit: 200 }
+    };
+
+    // Permanent Ledger for Booked Slots
+    let bookedSlotsLedger = {
+      "7_18:00 - 19:30": true
+    };
+
+    // Institute Player Approvals Data Engine
+    let playerApprovalsList = [
+      { id: "APP-101", passCode: "PASS-8921", name: "Alex Morgan", idNumber: "+91 9876543210", facility: "City Model Public College", slot: "18:00 - 19:30", status: "Approved" },
+      { id: "APP-102", passCode: "PASS-3412", name: "Rohan Sharma", idNumber: "GOVT-ID-7821", facility: "SCHOOL OF MANAGEMENT SCIENCES", slot: "16:30 - 18:00", status: "Pending" },
+      { id: "APP-103", passCode: "PASS-9081", name: "Priya Verma", idNumber: "+91 8899001122", facility: "RAMSWAROOP MEMORIAL COLLEGE", slot: "19:30 - 21:00", status: "Pending" },
+      { id: "APP-104", passCode: "PASS-4432", name: "Karan Patel", idNumber: "GOVT-ID-1102", facility: "BBD(BABU BANARSI DAS)", slot: "15:00 - 16:30", status: "Rejected" }
+    ];
+
+    // Standard Preset Slot Options Data Map for Option Updates
+    const standardSlots = [
+      { value: "15:00 - 16:30", label: "3:00 PM - 4:30 PM (After-School Early Slot)" },
+      { value: "16:30 - 18:00", label: "4:30 PM - 6:00 PM (Standard Afternoon)" },
+      { value: "18:00 - 19:30", label: "6:00 PM - 7:30 PM (Evening Sunset Session)" },
+      { value: "19:30 - 21:00", label: "7:30 PM - 9:00 PM (Night Floodlight Session)" },
+      { value: "21:00 - 22:30", label: "9:00 PM - 10:30 PM (Late Night Floodlight Special)" }
+    ];
+
+    // Redis Lock Simulation Engine Data Structure
+    let lockedSlotsLedger = {}; // Structure: { "FacilityID_SlotName": timestampExpiry }
+    let redisLockTimerInterval = null;
+
+    // Dynamic Rolling QR Code Engine Variables
+    let activeRollingPassCode = null;
+    let rollingQrInterval = null;
+    let rollingCountdownInterval = null;
+
+    let currentSelectedFacility = null;
+    let html5QrScanner = null;
+    let imageSlideIndices = {};
+    let slideIntervals = {};
+    let utilChart = null;
+
+    // Track active lock key & remaining timer seconds globally
+    let currentLockKey = null;
+    let lockDurationRemaining = 3600; // Updated to 1 hour (3600 seconds)
+
+    // Initialize application on load
+    window.onload = () => {
+      syncOfflineMemoryBuffer();
+      initNetworkListeners();
+      
+      lucide.createIcons();
+      renderFacilities(facilitiesData);
+      populateFeedbackInstitutes();
+      renderAdminApprovalsTable();
+      initAnalyticsChart();
+    };
+
+    // Render Admin Player Approval Table
+    function renderAdminApprovalsTable() {
+      const tbody = document.getElementById('admin-approvals-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      playerApprovalsList.forEach(item => {
+        let statusBadgeClass = "bg-amber-100 text-amber-800 border-amber-200";
+        if (item.status === 'Approved') statusBadgeClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
+        if (item.status === 'Rejected') statusBadgeClass = "bg-rose-100 text-rose-800 border-rose-200";
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-3 font-semibold text-slate-900">${item.name} <span class="text-[10px] text-slate-400 block">${item.passCode}</span></td>
+            <td class="p-3">${item.idNumber}</td>
+            <td class="p-3">${item.facility}</td>
+            <td class="p-3 font-mono">${item.slot}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded border text-[11px] font-bold ${statusBadgeClass}">
+                ${item.status}
+              </span>
+            </td>
+            <td class="p-3 text-right space-x-1">
+              <button onclick="updatePlayerApprovalStatus('${item.id}', 'Approved')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded transition text-[11px]">
+                Approve
+              </button>
+              <button onclick="updatePlayerApprovalStatus('${item.id}', 'Rejected')" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded transition text-[11px]">
+                Reject
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      lucide.createIcons();
+    }
+
+    // Action function to update status
+    function updatePlayerApprovalStatus(approvalId, newStatus) {
+      const record = playerApprovalsList.find(a => a.id === approvalId);
+      if (record) {
+        record.status = newStatus;
+        if (validBookedPasses[record.passCode]) {
+          validBookedPasses[record.passCode].approvalStatus = newStatus;
+          savePassToOfflineBuffer(record.passCode, validBookedPasses[record.passCode]);
+        }
+        renderAdminApprovalsTable();
+      }
+    }
+
+    // Network Status Listeners for Internet Failure / Offline Handling (Risk 2 Fix)
+    function initNetworkListeners() {
+      const updateNetworkStatus = () => {
+        const isOnline = navigator.onLine;
+        const netStatusDiv = document.getElementById('guard-network-status');
+        const netText = document.getElementById('network-text');
+
+        if (netStatusDiv && netText) {
+          if (isOnline) {
+            netStatusDiv.className = "mb-4 p-3 rounded-lg border text-xs font-semibold flex items-center justify-between bg-emerald-50 border-emerald-300 text-emerald-800";
+            netText.innerText = "Online";
+          } else {
+            netStatusDiv.className = "mb-4 p-3 rounded-lg border text-xs font-semibold flex items-center justify-between bg-amber-50 border-amber-300 text-amber-800";
+            netText.innerText = "Offline (Ground Gate Lost Wi-Fi)";
+          }
+        }
+      };
+
+      window.addEventListener('online', updateNetworkStatus);
+      window.addEventListener('offline', updateNetworkStatus);
+      updateNetworkStatus();
+    }
+
+    // Offline Memory Buffer Sync Function
+    function syncOfflineMemoryBuffer() {
+      try {
+        const localData = localStorage.getItem('ks_offline_passes');
+        if (localData) {
+          const parsed = JSON.parse(localData);
+          validBookedPasses = { ...validBookedPasses, ...parsed };
+        } else {
+          localStorage.setItem('ks_offline_passes', JSON.stringify(validBookedPasses));
+        }
+
+        const localBookedSlots = localStorage.getItem('ks_booked_slots');
+        if (localBookedSlots) {
+          bookedSlotsLedger = JSON.parse(localBookedSlots);
+        } else {
+          localStorage.setItem('ks_booked_slots', JSON.stringify(bookedSlotsLedger));
+        }
+      } catch(e) {
+        console.warn("Offline storage buffer restricted or unavailable.", e);
+      }
+    }
+
+    function savePassToOfflineBuffer(passCode, passObject) {
+      validBookedPasses[passCode] = passObject;
+      try {
+        localStorage.setItem('ks_offline_passes', JSON.stringify(validBookedPasses));
+      } catch(e) {
+        console.warn("Could not persist to offline memory buffer.", e);
+      }
+    }
+
+    // Sign In Modal Functions
+    function openSignInModal() {
+      document.getElementById('signin-modal').classList.remove('hidden');
+    }
+
+    function closeSignInModal() {
+      document.getElementById('signin-modal').classList.add('hidden');
+    }
+
+    function handleSignIn(e) {
+      e.preventDefault();
+      const email = document.getElementById('signin-email').value;
+      closeSignInModal();
+      
+      const signInBtn = document.getElementById('nav-signin');
+      signInBtn.innerHTML = `<i data-lucide="user-check" class="inline w-4 h-4 mr-1"></i> Signed In`;
+      signInBtn.classList.remove('text-emerald-400');
+      signInBtn.classList.add('text-emerald-300');
+      lucide.createIcons();
+    }
+
+    // Role Switching Function
+    function switchRole(role) {
+      document.querySelectorAll('.role-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white');
+        btn.classList.add('text-slate-300');
+      });
+
+      document.getElementById(`nav-${role}`).classList.add('bg-emerald-600', 'text-white');
+      document.getElementById(`nav-${role}`).classList.remove('text-slate-300');
+
+      document.getElementById('view-athlete').classList.add('hidden');
+      document.getElementById('view-admin').classList.add('hidden');
+      document.getElementById('view-guard').classList.add('hidden');
+      document.getElementById('view-feedback').classList.add('hidden');
+
+      document.getElementById(`view-${role}`).classList.remove('hidden');
+
+      if (role !== 'guard' && html5QrScanner) {
+        stopCameraScanner();
+      }
+    }
+
+    // Populate Institutes into Player Feedback Select Option
+    function populateFeedbackInstitutes() {
+      const select = document.getElementById('feedback-institute-select');
+      select.innerHTML = '';
+      facilitiesData.forEach(f => {
+        select.innerHTML += `<option value="${f.name}">${f.name} (${f.sport} Ground)</option>`;
+      });
+    }
+
+    // Handle Player Feedback Submission
+    function handleFeedbackSubmit(e) {
+      e.preventDefault();
+      document.getElementById('feedback-success-msg').classList.remove('hidden');
+      document.getElementById('feedback-text').value = '';
+
+      setTimeout(() => {
+        document.getElementById('feedback-success-msg').classList.add('hidden');
+      }, 4000);
+    }
+
+    // Scroll horizontal search bar
+    function scrollSearch(offset) {
+      document.getElementById('slidable-search-bar').scrollBy({ left: offset, behavior: 'smooth' });
+    }
+
+    // Scroll horizontal equipment bar
+    function scrollEquip(offset) {
+      document.getElementById('equipment-selection-container').scrollBy({ left: offset, behavior: 'smooth' });
+    }
+
+    // Filter facilities based on input & dropdown
+    function filterFacilities() {
+      const text = document.getElementById('search-input').value.toLowerCase();
+      const sport = document.getElementById('sport-filter').value;
+
+      const filtered = facilitiesData.filter(item => {
+        const matchesText = item.name.toLowerCase().includes(text) || item.sport.toLowerCase().includes(text);
+        const matchesSport = (sport === 'ALL') || (item.sport.toLowerCase() === sport.toLowerCase());
+        return matchesText && matchesSport;
+      });
+
+      renderFacilities(filtered);
+    }
+
+    function quickFilterSport(sportName) {
+      document.getElementById('sport-filter').value = sportName;
+      filterFacilities();
+    }
+
+    function resetFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('sport-filter').value = 'ALL';
+      renderFacilities(facilitiesData);
+    }
+
+    // Render Ground Cards into Grid
+    function renderFacilities(data) {
+      const grid = document.getElementById('facility-grid');
+      grid.innerHTML = '';
+      
+      Object.keys(slideIntervals).forEach(key => clearInterval(slideIntervals[key]));
+      slideIntervals = {};
+
+      if (data.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+            <i data-lucide="frown" class="w-10 h-10 text-slate-400 mx-auto mb-2"></i>
+            <p class="text-slate-600 font-semibold">No outdoor sports grounds match your search criteria.</p>
+            <button onclick="resetFilters()" class="mt-3 text-xs bg-emerald-600 text-white font-bold px-4 py-2 rounded-lg">Clear Filters</button>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      data.forEach(item => {
+        imageSlideIndices[item.id] = 0;
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between";
+        
+        const slidesHTML = item.images.map(imgSrc => `
+          <img src="${imgSrc}" class="slideshow-slide" alt="${item.name}">
+        `).join('');
+
+        const dotsHTML = item.images.map((_, idx) => `
+          <span id="dot-${item.id}-${idx}" class="w-2 h-2 rounded-full transition-all ${idx === 0 ? 'bg-white scale-125' : 'bg-white/50'}"></span>
+        `).join('');
+
+        card.innerHTML = `
+          <div>
+            <div class="relative h-48 w-full overflow-hidden bg-slate-900 group">
+              <div id="slideshow-${item.id}" class="slideshow-wrapper">
+                ${slidesHTML}
+              </div>
+              <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-1.5 z-10 bg-black/40 px-2 py-1 rounded-full backdrop-blur-xs">
+                ${dotsHTML}
+              </div>
+              <span class="absolute top-3 left-3 bg-emerald-600 text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-md">
+                ${item.badge}
+              </span>
+              <span class="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-xs text-emerald-400 text-xs font-bold px-2 py-1 rounded-md border border-slate-700">
+                ${item.distance}
+              </span>
+            </div>
+
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-slate-900 text-base leading-snug">${item.name}</h3>
+              </div>
+              <p class="text-xs text-slate-500 mb-2 flex items-center">
+                <i data-lucide="trophy" class="w-3.5 h-3.5 mr-1 text-emerald-600"></i> ${item.sport} Ground
+              </p>
+              <p class="text-[11px] text-slate-500 mb-2 flex items-center truncate">
+                <i data-lucide="dumbbell" class="w-3.5 h-3.5 mr-1 text-slate-400 shrink-0"></i> Gear: ${item.equipment && item.equipment.length > 0 ? item.equipment.map(e => e.name).join(', ') : 'Bring Own Gear'}
+              </p>
+              <p class="text-[11px] text-emerald-700 font-medium mb-3 flex items-center">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 mr-1 text-emerald-600"></i> Security Deposit: ₹${item.deposit} (Refundable)
+              </p>
+              <div class="flex items-center justify-between text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                <span>Extended Hours:</span>
+                <span class="font-semibold text-emerald-700">3:00 PM - 10:30 PM</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="px-5 pb-5 pt-0 flex items-center justify-between gap-2">
+            <div>
+              <span class="text-lg font-black text-slate-900">₹${item.rate}</span>
+              <span class="text-xs text-slate-500"> / hour</span>
+            </div>
+            <div class="flex space-x-2">
+              <button onclick="openInstituteModal(${item.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg transition">
+                Details
+              </button>
+              <button onclick="openBookingModal(${item.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition shadow-sm">
+                Book Slot
+              </button>
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+        
+        if (item.images.length > 1) {
+          slideIntervals[item.id] = setInterval(() => {
+            nextSlide(item.id, item.images.length);
+          }, 3500);
+        }
+      });
+
+      lucide.createIcons();
+    }
+
+    // Carousel Image Next Slide Helper
+    function nextSlide(id, total) {
+      imageSlideIndices[id] = (imageSlideIndices[id] + 1) % total;
+      const wrapper = document.getElementById(`slideshow-${id}`);
+      if (wrapper) {
+        wrapper.style.transform = `translateX(-${imageSlideIndices[id] * 100}%)`;
+        for (let i = 0; i < total; i++) {
+          const dot = document.getElementById(`dot-${id}-${i}`);
+          if (dot) {
+            dot.className = i === imageSlideIndices[id] ? 'w-2 h-2 rounded-full transition-all bg-white scale-125' : 'w-2 h-2 rounded-full transition-all bg-white/50';
+          }
+        }
+      }
+    }
+
+    // Modal Handlers
+    function openInstituteModal(id) {
+      currentSelectedFacility = facilitiesData.find(f => f.id === id);
+      document.getElementById('popup-inst-name').innerText = currentSelectedFacility.name;
+      document.getElementById('popup-inst-location').innerText = `${currentSelectedFacility.distance} from your location`;
+      document.getElementById('popup-inst-sport').innerText = currentSelectedFacility.sport;
+      document.getElementById('popup-inst-dimensions').innerText = currentSelectedFacility.dimensions || "Standard Regulation Size";
+      document.getElementById('popup-inst-rate').innerText = `₹${currentSelectedFacility.rate} / hr`;
+      document.getElementById('popup-inst-deposit').innerText = `₹${currentSelectedFacility.deposit} (100% Refundable)`;
+      
+      const equipList = document.getElementById('popup-equipment-list');
+      equipList.innerHTML = '';
+      if (currentSelectedFacility.equipment && currentSelectedFacility.equipment.length > 0) {
+        currentSelectedFacility.equipment.forEach(eq => {
+          equipList.innerHTML += `<li class="flex justify-between"><span>• ${eq.name}</span><span class="font-semibold text-slate-800">₹${eq.fee}/hr</span></li>`;
+        });
+      } else {
+        equipList.innerHTML = `<li class="text-slate-400 italic">No equipment rental offered at this location.</li>`;
+      }
+
+      document.getElementById('popup-book-btn').onclick = () => {
+        closeInstituteModal();
+        openBookingModal(id);
+      };
+      document.getElementById('institute-popup-modal').classList.remove('hidden');
+    }
+
+    function closeInstituteModal() {
+      document.getElementById('institute-popup-modal').classList.add('hidden');
+    }
+
+    // Helper functions for Slot Booked Alert Modal
+    function showSlotBookedModal() {
+      document.getElementById('slot-booked-modal').classList.remove('hidden');
+    }
+
+    function closeSlotBookedModal() {
+      document.getElementById('slot-booked-modal').classList.add('hidden');
+    }
+
+    // Check Slot Booking Status Engine
+    function isSlotBooked(facilityId, slotName) {
+      const bookingKey = `${facilityId}_${slotName}`;
+      return bookedSlotsLedger[bookingKey] === true;
+    }
+
+    // Dynamic Option Label Refresh for Slot Select Element
+    function refreshSlotDropdownOptions(facilityId) {
+      const selectEl = document.getElementById('slot-select');
+      selectEl.innerHTML = '';
+
+      standardSlots.forEach(s => {
+        const isBooked = isSlotBooked(facilityId, s.value);
+        const option = document.createElement('option');
+        option.value = s.value;
+        option.textContent = isBooked ? `${s.label} - (Currently Booked)` : s.label;
+        selectEl.appendChild(option);
+      });
+
+      const customOpt = document.createElement('option');
+      customOpt.value = "CUSTOM";
+      customOpt.textContent = "Custom Timing (Specify Hours)";
+      selectEl.appendChild(customOpt);
+    }
+
+    // Open Booking Modal and Validate Slot Status
+    function openBookingModal(id) {
+      currentSelectedFacility = facilitiesData.find(f => f.id === id);
+      
+      document.getElementById('modal-title').innerText = `Reserve Slot - ${currentSelectedFacility.name}`;
+      
+      // Refresh options to tag booked slots
+      refreshSlotDropdownOptions(currentSelectedFacility.id);
+
+      // Find first unbooked slot or fallback to default
+      let initialSlot = "15:00 - 16:30";
+      if (isSlotBooked(currentSelectedFacility.id, initialSlot)) {
+        const unbooked = standardSlots.find(s => !isSlotBooked(currentSelectedFacility.id, s.value));
+        if (unbooked) {
+          initialSlot = unbooked.value;
+        }
+      }
+
+      document.getElementById('slot-select').value = initialSlot;
+      toggleCustomTiming(initialSlot);
+
+      if (!isSlotBooked(currentSelectedFacility.id, initialSlot)) {
+        const lockKey = `${currentSelectedFacility.id}_${initialSlot}`;
+        startRedisLockTimer(lockKey);
+      }
+
+      // Populate Slidable Equipment Cards
+      const equipContainer = document.getElementById('equipment-selection-container');
+      equipContainer.innerHTML = '';
+      if (currentSelectedFacility.equipment && currentSelectedFacility.equipment.length > 0) {
+        currentSelectedFacility.equipment.forEach((eq) => {
+          const iconName = eq.icon || 'dumbbell';
+          equipContainer.innerHTML += `
+            <label class="min-w-[160px] max-w-[170px] bg-slate-800 hover:bg-slate-750 p-3 rounded-xl border border-slate-700 cursor-pointer flex flex-col justify-between shrink-0 transition relative group select-none">
+              <div class="flex justify-between items-start mb-2">
+                <i data-lucide="${iconName}" class="w-5 h-5 text-emerald-400"></i>
+                <input type="checkbox" name="equipment-addon" value="${eq.fee}" data-name="${eq.name}" onchange="updateTotalPrice()" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 bg-slate-900 border-slate-600">
+              </div>
+              <div>
+                <div class="text-xs font-bold text-white leading-tight mb-1">${eq.name}</div>
+                <div class="text-[11px] font-bold text-emerald-400">+₹${eq.fee} <span class="text-[9px] text-slate-400 font-normal">/ hr</span></div>
+              </div>
+            </label>
+          `;
+        });
+      } else {
+        equipContainer.innerHTML = `<span class="text-xs text-slate-400 italic">No rental gear available at this location.</span>`;
+      }
+
+      lucide.createIcons();
+      updateTotalPrice();
+      document.getElementById('booking-modal').classList.remove('hidden');
+    }
+
+    // 1-Hour Hold Timer (Continuous Timer)
+    function startRedisLockTimer(lockKey) {
+      if (currentLockKey !== lockKey) {
+        if (redisLockTimerInterval) clearInterval(redisLockTimerInterval);
+        currentLockKey = lockKey;
+        lockDurationRemaining = 3600; // Reset to 1 hour (3600 seconds) only when switching to a NEW unbooked slot key
+      } else if (redisLockTimerInterval) {
+        return; // Keep existing active countdown running without resetting
+      }
+
+      lockedSlotsLedger[lockKey] = Date.now() + (lockDurationRemaining * 1000);
+      const countdownEl = document.getElementById('lock-countdown');
+      
+      redisLockTimerInterval = setInterval(() => {
+        let minutes = parseInt(lockDurationRemaining / 60, 10);
+        let seconds = parseInt(lockDurationRemaining % 60, 10);
+
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        if (countdownEl) countdownEl.textContent = minutes + ":" + seconds;
+
+        if (--lockDurationRemaining < 0) {
+          clearInterval(redisLockTimerInterval);
+          redisLockTimerInterval = null;
+          delete lockedSlotsLedger[lockKey];
+          currentLockKey = null;
+          closeBookingModal();
+        }
+      }, 1000);
+    }
+
+    function updateTotalPrice() {
+      if (!currentSelectedFacility) return;
+      let slotRate = currentSelectedFacility.rate;
+      let depositFee = currentSelectedFacility.deposit || 0;
+      let equipFee = 0;
+
+      const checkedEquipment = document.querySelectorAll('input[name="equipment-addon"]:checked');
+      checkedEquipment.forEach(item => {
+        equipFee += parseInt(item.value);
+      });
+
+      let total = slotRate + equipFee + depositFee;
+
+      document.getElementById('summary-slot-fee').innerText = `₹${slotRate}`;
+      document.getElementById('summary-equip-fee').innerText = `₹${equipFee}`;
+      document.getElementById('summary-deposit-fee').innerText = `₹${depositFee}`;
+      document.getElementById('booking-total-price').innerText = `₹${total}.00 Total`;
+    }
+
+    function closeBookingModal() {
+      if (redisLockTimerInterval) clearInterval(redisLockTimerInterval);
+      redisLockTimerInterval = null;
+      currentLockKey = null;
+      document.getElementById('booking-modal').classList.add('hidden');
+    }
+
+    function openCustomSportModal() {
+      document.getElementById('custom-sport-modal').classList.remove('hidden');
+    }
+
+    function closeCustomSportModal() {
+      document.getElementById('custom-sport-modal').classList.add('hidden');
+    }
+
+    // Custom Timing Option Toggle Handler with Double-Booking Check and Continuous Timer support
+    function toggleCustomTiming(val) {
+      const customContainer = document.getElementById('custom-timing-container');
+      const startInput = document.getElementById('custom-start-time');
+      const endInput = document.getElementById('custom-end-time');
+
+      if (val === 'CUSTOM') {
+        customContainer.classList.remove('hidden');
+        startInput.required = true;
+        endInput.required = true;
+      } else {
+        customContainer.classList.add('hidden');
+        startInput.required = false;
+        endInput.required = false;
+
+        // Check availability for selected pre-set slot and alert if booked
+        if (currentSelectedFacility) {
+          if (isSlotBooked(currentSelectedFacility.id, val)) {
+            showSlotBookedModal();
+            // Timer continues as it is; do NOT restart it or modify the current timer duration
+          } else {
+            const lockKey = `${currentSelectedFacility.id}_${val}`;
+            startRedisLockTimer(lockKey);
+          }
+        }
+      }
+    }
+
+    function checkCustomSlotAvailability() {
+      const customStart = document.getElementById('custom-start-time').value;
+      const customEnd = document.getElementById('custom-end-time').value;
+      if (customStart && customEnd && currentSelectedFacility) {
+        const formattedSlot = `${formatTo12Hr(customStart)} - ${formatTo12Hr(customEnd)} (Custom)`;
+        if (isSlotBooked(currentSelectedFacility.id, formattedSlot)) {
+          showSlotBookedModal();
+        }
+      }
+    }
+
+    // Toggle Payment Gateway View Fields
+    function togglePaymentInputs(method) {
+      document.getElementById('pay-upi-fields').classList.add('hidden');
+      document.getElementById('pay-card-fields').classList.add('hidden');
+      document.getElementById('pay-net-fields').classList.add('hidden');
+
+      if (method === 'upi') {
+        document.getElementById('pay-upi-fields').classList.remove('hidden');
+      } else if (method === 'card') {
+        document.getElementById('pay-card-fields').classList.remove('hidden');
+      } else if (method === 'netbanking') {
+        document.getElementById('pay-net-fields').classList.remove('hidden');
+      }
+    }
+
+    // Custom Facility Form Submission
+    function handleCustomSportSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('custom-inst-name').value;
+      const sport = document.getElementById('custom-sport-name').value;
+      const dimensions = document.getElementById('custom-dimensions').value || "Standard Size";
+      const rate = parseInt(document.getElementById('custom-rate').value);
+      const deposit = parseInt(document.getElementById('custom-deposit').value) || 0;
+      const dist = document.getElementById('custom-distance').value;
+      const equipRaw = document.getElementById('custom-equipment').value;
+
+      let equipList = [];
+      if (equipRaw) {
+        equipList = equipRaw.split(',').map(item => {
+          return { name: item.trim(), fee: 50, icon: "dumbbell" };
+        });
+      }
+
+      const newFacility = {
+        id: Date.now(),
+        name: name,
+        sport: sport,
+        dimensions: dimensions,
+        rate: rate,
+        deposit: deposit,
+        distance: `${dist} km`,
+        badge: "Community Added Ground",
+        equipment: equipList,
+        images: [
+          "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=600&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1551958219-acbc608c6377?w=600&auto=format&fit=crop&q=80"
+        ]
+      };
+
+      facilitiesData.unshift(newFacility);
+      renderFacilities(facilitiesData);
+      populateFeedbackInstitutes();
+      closeCustomSportModal();
+    }
+
+    // Format 24hr Time String to 12hr AM/PM format
+    function formatTo12Hr(timeStr) {
+      if (!timeStr) return "";
+      let [hours, minutes] = timeStr.split(':');
+      hours = parseInt(hours);
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      return `${hours}:${minutes} ${ampm}`;
+    }
+
+    // Handle Booking, Payment & Slot Locking
+    function handleBooking(e) {
+      e.preventDefault();
+
+      let selectedSlot = document.getElementById('slot-select').value;
+      if (selectedSlot === 'CUSTOM') {
+        const customStart = document.getElementById('custom-start-time').value;
+        const customEnd = document.getElementById('custom-end-time').value;
+        selectedSlot = `${formatTo12Hr(customStart)} - ${formatTo12Hr(customEnd)} (Custom)`;
+      }
+
+      if (isSlotBooked(currentSelectedFacility.id, selectedSlot)) {
+        showSlotBookedModal();
+        return;
+      }
+
+      const btn = document.getElementById('btn-submit-booking');
+      const btnText = document.getElementById('booking-btn-text');
+      
+      const payMethod = document.querySelector('input[name="payment-method"]:checked').value;
+      let payLabel = "UPI / Mobile";
+      if (payMethod === 'card') payLabel = "Card";
+      if (payMethod === 'netbanking') payLabel = "Net Banking";
+
+      const playerCount = document.getElementById('team-player-count').value;
+
+      // Selected Equipment Summary
+      const selectedEquipList = [];
+      document.querySelectorAll('input[name="equipment-addon"]:checked').forEach(item => {
+        selectedEquipList.push(item.getAttribute('data-name'));
+      });
+      const equipSummaryText = selectedEquipList.length > 0 ? selectedEquipList.join(', ') : "None";
+
+      btn.disabled = true;
+      btnText.innerText = "Processing Payment...";
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btnText.innerText = "Pay & Generate Gate Pass";
+
+        // Mark this slot as permanently booked in state and localStorage
+        const bookingKey = `${currentSelectedFacility.id}_${selectedSlot}`;
+        bookedSlotsLedger[bookingKey] = true;
+        try {
+          localStorage.setItem('ks_booked_slots', JSON.stringify(bookedSlotsLedger));
+        } catch(err) {
+          console.warn("Unable to sync booked slots to local storage.", err);
+        }
+
+        // Update dropdown option titles dynamically to mark it booked
+        refreshSlotDropdownOptions(currentSelectedFacility.id);
+
+        closeBookingModal();
+
+        const passCode = `PASS-${Math.floor(1000 + Math.random() * 9000)}`;
+        const athleteName = document.getElementById('athlete-name').value;
+        const athleteId = document.getElementById('athlete-id').value;
+        const finalPaidAmount = document.getElementById('booking-total-price').innerText;
+
+        const passDataObj = {
+          facility: currentSelectedFacility.name,
+          slot: selectedSlot,
+          name: athleteName,
+          players: playerCount,
+          equipment: equipSummaryText,
+          deposit: currentSelectedFacility.deposit,
+          approvalStatus: "Approved"
+        };
+
+        // Add to Admin Approvals List
+        playerApprovalsList.unshift({
+          id: `APP-${Date.now()}`,
+          passCode: passCode,
+          name: athleteName,
+          idNumber: athleteId,
+          facility: currentSelectedFacility.name,
+          slot: selectedSlot,
+          status: "Approved"
+        });
+        renderAdminApprovalsTable();
+
+        savePassToOfflineBuffer(passCode, passDataObj);
+
+        document.getElementById('pass-facility-name').innerText = currentSelectedFacility.name;
+        document.getElementById('pass-slot-time').innerText = `Slot: Today, ${selectedSlot}`;
+        document.getElementById('pass-player-count').innerText = `Players: ${playerCount} Team Members`;
+        document.getElementById('pass-equipment-summary').innerText = `Equipment Rented: ${equipSummaryText}`;
+        document.getElementById('pass-deposit-summary').innerText = `Refundable Deposit Held: ₹${currentSelectedFacility.deposit}`;
+        document.getElementById('pass-code-text').innerText = passCode;
+        document.getElementById('pass-payment-status').innerText = `Paid (${finalPaidAmount}) via ${payLabel}`;
+
+        startDynamicRollingQR(passCode);
+
+        document.getElementById('pass-modal').classList.remove('hidden');
+        lucide.createIcons();
+        
+        const currRevenueText = document.getElementById('admin-revenue').innerText.replace('₹', '').replace(/,/g, '');
+        const currRevenue = parseInt(currRevenueText);
+        const currEntries = parseInt(document.getElementById('admin-entries').innerText);
+        document.getElementById('admin-revenue').innerText = `₹${(currRevenue + currentSelectedFacility.rate).toLocaleString('en-IN')}`;
+        document.getElementById('admin-entries').innerText = currEntries + 1;
+      }, 1200);
+    }
+
+    // Dynamic Rolling QR Generator Implementation
+    function startDynamicRollingQR(basePassCode) {
+      activeRollingPassCode = basePassCode;
+      
+      if (rollingQrInterval) clearInterval(rollingQrInterval);
+      if (rollingCountdownInterval) clearInterval(rollingCountdownInterval);
+
+      const renderQR = () => {
+        const rollingSeed = Math.floor(Date.now() / 15000);
+        const dynamicPayload = `${basePassCode}_ROLL_${rollingSeed}`;
+
+        const qrContainer = document.getElementById('qrcode');
+        qrContainer.innerHTML = '';
+        
+        new QRCode(qrContainer, {
+          text: dynamicPayload,
+          width: 140,
+          height: 140
+        });
+      };
+
+      renderQR();
+
+      let secondsLeft = 15;
+      const countdownEl = document.getElementById('qr-refresh-timer');
+
+      rollingCountdownInterval = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft <= 0) secondsLeft = 15;
+        if (countdownEl) countdownEl.innerText = secondsLeft;
+      }, 1000);
+
+      rollingQrInterval = setInterval(() => {
+        renderQR();
+      }, 15000);
+    }
+
+    function closePassModal() {
+      if (rollingQrInterval) clearInterval(rollingQrInterval);
+      if (rollingCountdownInterval) clearInterval(rollingCountdownInterval);
+      document.getElementById('pass-modal').classList.add('hidden');
+    }
+
+    // Security Guard Live Camera Scanner Implementation
+    function startCameraScanner() {
+      const qrContainer = document.getElementById('qr-reader');
+      qrContainer.classList.remove('hidden');
+      document.getElementById('btn-start-scanner').classList.add('hidden');
+      document.getElementById('btn-stop-scanner').classList.remove('hidden');
+      document.getElementById('scanner-status').innerText = 'Scanning...';
+      document.getElementById('scanner-status').className = 'text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800';
+
+      html5QrScanner = new Html5Qrcode("qr-reader");
+      html5QrScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        (decodedText) => {
+          stopCameraScanner();
+          processPassVerification(decodedText);
+        },
+        (errorMessage) => {}
+      ).catch(err => {
+        stopCameraScanner();
+      });
+    }
+
+    function stopCameraScanner() {
+      if (html5QrScanner) {
+        html5QrScanner.stop().then(() => {
+          html5QrScanner.clear();
+          document.getElementById('qr-reader').classList.add('hidden');
+          document.getElementById('btn-start-scanner').classList.remove('hidden');
+          document.getElementById('btn-stop-scanner').classList.add('hidden');
+          document.getElementById('scanner-status').innerText = 'Inactive';
+          document.getElementById('scanner-status').className = 'text-xs font-semibold px-2 py-0.5 rounded bg-slate-200 text-slate-600';
+        }).catch(err => console.log(err));
+      }
+    }
+
+    // Universal File Upload QR Scanner
+    function scanQrFromFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const html5QrCode = new Html5Qrcode("qr-reader");
+      html5QrCode.scanFile(file, true)
+        .then(decodedText => {
+          processPassVerification(decodedText);
+        })
+        .catch(err => {
+          showInvalidQrModal("Could not read a valid QR code image.");
+        });
+    }
+
+    function verifyPass() {
+      const passId = document.getElementById('manual-pass-id').value.trim();
+      if (!passId) return;
+      processPassVerification(passId);
+    }
+
+    // Pass Verification Logic with Offline Fallback & Institute Approval Checking
+    function processPassVerification(rawScannedCode) {
+      const resultDiv = document.getElementById('scan-result');
+      resultDiv.classList.remove('hidden');
+
+      let passCode = rawScannedCode;
+      let isValidRollingQR = true;
+
+      if (rawScannedCode.includes('_ROLL_')) {
+        const parts = rawScannedCode.split('_ROLL_');
+        passCode = parts[0];
+        const scannedSeed = parseInt(parts[1]);
+        const currentSeed = Math.floor(Date.now() / 15000);
+
+        if (Math.abs(currentSeed - scannedSeed) > 1) {
+          isValidRollingQR = false;
+        }
+      }
+
+      // Check in-memory ledger or sync from localStorage offline buffer
+      let passInfo = validBookedPasses[passCode];
+      if (!passInfo) {
+        syncOfflineMemoryBuffer();
+        passInfo = validBookedPasses[passCode];
+      }
+
+      const isOffline = !navigator.onLine;
+
+      if (passInfo && isValidRollingQR) {
+        // Verification based on approval status set by admin
+        const isApproved = (passInfo.approvalStatus === "Approved" || !passInfo.approvalStatus);
+
+        if (isApproved) {
+          resultDiv.className = "p-4 rounded-lg border bg-emerald-50 border-emerald-300 text-emerald-900 space-y-1.5";
+          resultDiv.innerHTML = `
+            <div class="flex items-center font-bold text-base text-emerald-800">
+              <i data-lucide="check-circle-2" class="w-5 h-5 mr-2 text-emerald-600"></i> ENTRY GRANTED - VALID PASS ${isOffline ? '(OFFLINE MODE)' : ''}
+            </div>
+            <div><strong>Athlete Name:</strong> ${passInfo.name}</div>
+            <div><strong>Institute Ground:</strong> ${passInfo.facility}</div>
+            <div><strong>Institute Approval:</strong> <span class="font-bold text-emerald-700">APPROVED</span></div>
+            <div><strong>Reserved Slot:</strong> ${passInfo.slot}</div>
+            <div><strong>Team Size:</strong> ${passInfo.players || 1} Players</div>
+            <div><strong>Equipment Rented:</strong> ${passInfo.equipment || 'None'}</div>
+            <div><strong>Refundable Deposit:</strong> ₹${passInfo.deposit || 0}</div>
+            <div><strong>Pass Code:</strong> ${passCode}</div>
+            <div class="text-[10px] text-emerald-700 mt-1"> Verified via Local Offline Memory Buffer.</div>
+          `;
+        } else if (passInfo.approvalStatus === "Pending") {
+          resultDiv.className = "p-4 rounded-lg border bg-amber-50 border-amber-300 text-amber-900 space-y-1.5";
+          resultDiv.innerHTML = `
+            <div class="flex items-center font-bold text-base text-amber-800">
+              <i data-lucide="clock" class="w-5 h-5 mr-2 text-amber-600"></i> ENTRY PENDING - AWAITING INSTITUTE APPROVAL
+            </div>
+            <div><strong>Athlete Name:</strong> ${passInfo.name}</div>
+            <div><strong>Institute Approval Status:</strong> <span class="font-bold text-amber-700">Pending Review</span></div>
+            <div>Please contact institute administration to confirm your entry permission.</div>
+          `;
+        } else {
+          resultDiv.className = "p-4 rounded-lg border bg-rose-50 border-rose-300 text-rose-900 space-y-1.5";
+          resultDiv.innerHTML = `
+            <div class="flex items-center font-bold text-base text-rose-800">
+              <i data-lucide="x-circle" class="w-5 h-5 mr-2 text-rose-600"></i> ENTRY REJECTED - INSTITUTE DISAPPROVED
+            </div>
+            <div><strong>Athlete Name:</strong> ${passInfo.name}</div>
+            <div><strong>Institute Approval Status:</strong> <span class="font-bold text-rose-700">Rejected</span></div>
+            <div>Campus entry has been denied by the institute administration.</div>
+          `;
+        }
+      } else if (passInfo && !isValidRollingQR) {
+        resultDiv.className = "p-4 rounded-lg border bg-rose-50 border-rose-300 text-rose-900 space-y-1";
+        resultDiv.innerHTML = `
+          <div class="flex items-center font-bold text-base text-rose-800">
+            <i data-lucide="x-circle" class="w-5 h-5 mr-2 text-rose-600"></i> ENTRY DENIED - EXPIRED / SCREENSHOT DETECTED
+          </div>
+          <div>Dynamic Rolling QR token expired or screenshot shared. Please use live pass view.</div>
+        `;
+        showInvalidQrModal(`Screenshot detected or rolling QR token expired for pass ${passCode}.`);
+      } else {
+        resultDiv.className = "p-4 rounded-lg border bg-rose-50 border-rose-300 text-rose-900 space-y-1";
+        resultDiv.innerHTML = `
+          <div class="flex items-center font-bold text-base text-rose-800">
+            <i data-lucide="x-circle" class="w-5 h-5 mr-2 text-rose-600"></i> ENTRY DENIED - INVALID PASS
+          </div>
+          <div>Code <strong>${rawScannedCode}</strong> is not recognized in active booking ledger.</div>
+        `;
+        showInvalidQrModal(`Code "${rawScannedCode}" does not match active records.`);
+      }
+      lucide.createIcons();
+    }
+
+    function showInvalidQrModal(detailText) {
+      document.getElementById('invalid-qr-details').innerText = detailText;
+      document.getElementById('invalid-qr-modal').classList.remove('hidden');
+    }
+
+    function closeInvalidQrModal() {
+      document.getElementById('invalid-qr-modal').classList.add('hidden');
+    }
+
+    // Chart.js Admin Analytics Initialization
+    function initAnalyticsChart() {
+      const ctx = document.getElementById('utilizationChart').getContext('2d');
+      utilChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Football Turf', 'Cricket Nets', 'Tennis Court', 'Basketball', 'Athletics Track', 'Volleyball'],
+          datasets: [
+            {
+              label: 'Baseline Academic Utilisation (%)',
+              data: [22, 15, 18, 25, 12, 10],
+              backgroundColor: '#cbd5e1',
+              borderRadius: 6
+            },
+            {
+              label: 'Extended Access Utilisation (%)',
+              data: [92, 88, 79, 85, 70, 75],
+              backgroundColor: '#059669',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          },
+          scales: {
+            y: { beginAtZero: true, max: 100 }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
